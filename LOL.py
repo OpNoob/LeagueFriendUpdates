@@ -41,9 +41,9 @@ sd = ServerData()
 
 def getGameResultUpdates(force=False):
     lt = LiveTracking(sd.getTracking())
-    summoners = lt.getSummoners()
+    summoners_track = lt.getSummoners()
 
-    # summoners = set(ds.getSummoners())
+    summoners = set(ds.getSummoners())
 
     for summoner in summoners:
         name, platform, region = summoner
@@ -58,14 +58,15 @@ def getGameResultUpdates(force=False):
                 break
 
             # ANNOUNCE
-            participant = getSummonerFromMatch(match_data, name)
-            kills = participant["kills"]
-            deaths = participant["deaths"]
-            assists = participant["assists"]
-            lane = participant["lane"]
-            win = participant["win"]
-            champion = participant["championName"]
-            yield name, kills, deaths, assists, win, lane, champion
+            if summoner in summoners_track:
+                participant = getSummonerFromMatch(match_data, name)
+                kills = participant["kills"]
+                deaths = participant["deaths"]
+                assists = participant["assists"]
+                lane = participant["lane"]
+                win = participant["win"]
+                champion = participant["championName"]
+                yield name, kills, deaths, assists, win, lane, champion
 
     # Saving
     ds.commit()
