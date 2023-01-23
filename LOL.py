@@ -219,7 +219,7 @@ def removeTrackLive(guild_id, summoner_name, platform="euw1", region="europe", r
     sd.save_class()
 
     if return_text:
-        return f"Summoner '{summoner_name}' is now tracked"
+        return f"Summoner '{summoner_name}' is no longer tracked"
     return True
 
 
