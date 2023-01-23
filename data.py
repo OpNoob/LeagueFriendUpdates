@@ -50,7 +50,7 @@ class DataStore:
             return False
 
     def setData(self, name: str, platform: str, region: str, data: dict):
-        sql_update = f"UPDATE {self._table_summoner} SET {self._data_k}=? WHERE {self._name_k}=? AND {self._platform_k}=? AND {self._region_k}=?"
+        sql_update = f"UPDATE {self._table_summoner} SET {self._data_k}=? WHERE LOWER({self._name_k})=LOWER(?) AND {self._platform_k}=? AND {self._region_k}=?"
         self.cur.execute(sql_update, (json.dumps(data), name, platform, region))
         self.commit()
 
@@ -69,8 +69,8 @@ class DataStore:
             if commit:
                 self.commit()
             return True
-        else:
-            print("Summoner id not found in database")
+        # else:
+        #     print("Summoner id not found in database")
 
         return False
 
@@ -85,13 +85,13 @@ class DataStore:
         self.conn.commit()
 
     def getSummonerID(self, name: str, platform: str, region: str):
-        sql_get = f"SELECT Id FROM {self._table_summoner} WHERE {self._name_k}=? AND {self._platform_k}=? AND {self._region_k}=?"
+        sql_get = f"SELECT Id FROM {self._table_summoner} WHERE LOWER({self._name_k})=LOWER(?) AND {self._platform_k}=? AND {self._region_k}=?"
         self.cur.execute(sql_get, (name, platform, region))
         summoner_id = self.cur.fetchone()
         return summoner_id
 
     def getData(self, name: str, platform: str, region: str):
-        sql_select = f"SELECT data FROM {self._table_summoner} WHERE {self._name_k}=? AND {self._platform_k}=? AND {self._region_k}=?"
+        sql_select = f"SELECT data FROM {self._table_summoner} WHERE LOWER({self._name_k})=LOWER(?) AND {self._platform_k}=? AND {self._region_k}=?"
         self.cur.execute(sql_select, (name, platform, region))
         obj = self.cur.fetchone()
         if obj is None:
