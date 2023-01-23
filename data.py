@@ -13,7 +13,9 @@ class DataStore:
         self._platform_k = "platform"
         self._region_k = "region"
         self._data_k = "data"
+
         self._table_match = "match_data"
+        self._match_id_k = "match_id"
         self._summoner_id = "summoner_id"
         self._match_k = "match"
 
@@ -23,7 +25,7 @@ class DataStore:
         sql_table_sum = f"CREATE TABLE IF NOT EXISTS {self._table_summoner} (ID INTEGER PRIMARY KEY AUTOINCREMENT, {self._name_k} TEXT(16), {self._platform_k} VARCHAR(5), {self._region_k} VARCHAR(16), {self._data_k} json, UNIQUE ({self._name_k}, {self._platform_k}, {self._region_k}) )"
         self.cur.execute(sql_table_sum)
 
-        sql_table_mat = f"CREATE TABLE IF NOT EXISTS {self._table_match} (ID TEXT PRIMARY KEY, {self._summoner_id} INTEGER, {self._match_k} json, FOREIGN KEY({self._summoner_id}) REFERENCES {self._table_summoner}(Id) )"
+        sql_table_mat = f"CREATE TABLE IF NOT EXISTS {self._table_match} (ID INTEGER PRIMARY KEY AUTOINCREMENT, {self._summoner_id} INTEGER, {self._match_id_k} TEXT, {self._match_k} json, FOREIGN KEY({self._summoner_id}) REFERENCES {self._table_summoner}(Id) UNIQUE ({self._summoner_id}, {self._match_id_k}) )"
         self.cur.execute(sql_table_mat)
 
         self.commit()
@@ -57,15 +59,15 @@ class DataStore:
     def addMatch(self, name: str, platform: str, region: str, match: dict, match_id: str, commit=False):
         assert match is not None
 
-        if self.getMatch(match_id) is not None:
-            return False
-
         summoner_id = self.getSummonerID(name=name, platform=platform, region=region)
         if summoner_id is not None:
             summoner_id = summoner_id[0]
 
-            sql_insert = f"INSERT INTO {self._table_match}  VALUES (?, ?, ?)"
-            self.cur.execute(sql_insert, (match_id, summoner_id, json.dumps(match)))
+            if self.getMatch(summoner_id=summoner_id, match_id=match_id) is not None:
+                return False
+
+            sql_insert = f"INSERT INTO {self._table_match}  VALUES (NULL, ?, ?, ?)"
+            self.cur.execute(sql_insert, (summoner_id, match_id, json.dumps(match)))
             if commit:
                 self.commit()
             return True
@@ -114,9 +116,9 @@ class DataStore:
         else:
             print("Summoner id not found in database")
 
-    def getMatch(self, match_id: str):
-        sql_get = f"SELECT {self._match_k} FROM {self._table_match} WHERE Id=?"
-        self.cur.execute(sql_get, (match_id,))
+    def getMatch(self, summoner_id: int, match_id: str):
+        sql_get = f"SELECT {self._match_k} FROM {self._table_match} WHERE {self._summoner_id}=? AND {self._match_id_k}=?"
+        self.cur.execute(sql_get, (summoner_id, match_id,))
         match = self.cur.fetchone()
         if match is not None:
             match = match[0]

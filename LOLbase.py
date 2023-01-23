@@ -1,7 +1,16 @@
+import time
 import requests
 
 with open("data/riot_key.txt") as f_key:
     api_key = f_key.read()
+
+
+def handleWait(obj, wait=15):
+    if "status" in obj and "status_code" in obj["status"] and obj["status"]["status_code"] == 429:
+        print(f"Waiting {wait} seconds for response '{obj}'")
+        time.sleep(wait)
+        return True
+    return False
 
 
 def getResponse(path, platform: str = "euw1"):
@@ -10,7 +19,12 @@ def getResponse(path, platform: str = "euw1"):
 
     res = requests.get(url, params=params)
 
-    return res.json()
+    obj = res.json()
+
+    if handleWait(obj):
+        return getResponse(path, platform=platform)
+
+    return obj
 
 
 def getResponseR(path, region: str = "europe"):
@@ -19,7 +33,12 @@ def getResponseR(path, region: str = "europe"):
 
     res = requests.get(url, params=params)
 
-    return res.json()
+    obj = res.json()
+
+    if handleWait(obj):
+        return getResponseR(path, region=region)
+
+    return obj
 
 
 def getSummoner(summoner_name: str, platform: str = "euw1"):

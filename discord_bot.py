@@ -16,7 +16,7 @@ async def active(interaction):
     active_list = getActive()
 
     if len(active_list) == 0:
-        text = "Everyone else has a life.  Touch some grass pls."
+        text = "Everyone else has a life.  Touch some grass please."
     else:
         text = f"{len(active_list)} Players Active:"
         for name in active_list:

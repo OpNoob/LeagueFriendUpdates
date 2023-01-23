@@ -1,7 +1,7 @@
 from collections import Counter
 from datetime import datetime
 
-from LOLbase import *
+import LOLbase
 from data import DataStore
 from announcements import GameResult
 import time
@@ -38,19 +38,19 @@ def ms_to_str(milliseconds):
 ds = DataStore()
 
 
-def getGameResultUpdates():
+def getGameResultUpdates(force=False):
     summoners = set(ds.getSummoners())
 
     for summoner in summoners:
         name, platform, region = summoner
 
-        matches = getMatches(summoner_name=name, platform=platform, region=region)
+        matches = LOLbase.getMatches(summoner_name=name, platform=platform, region=region)
         # print(matches)
-        for match_data in getMatchData(matches):
+        for match_data in LOLbase.getMatchData(matches):
             # print(match_data)
             match_id = match_data['metadata']["matchId"]
             success = ds.addMatch(name=name, platform=platform, region=region, match=match_data, match_id=match_id)
-            if not success:
+            if not success and not force:
                 break
 
             # ANNOUNCE
@@ -112,8 +112,16 @@ def getStats(summoner_name, platform="euw1", region="europe", return_text=True):
         champions.update([participant["championName"]])
 
     if return_text:
-        lane = lanes.most_common(1)[0]
-        champion = champions.most_common(1)[0]
+        lanes_common = lanes.most_common(1)
+        if len(lanes_common) >= 1:
+            lane = lanes_common[0]
+        else:
+            lane = (None, None)
+        champions_common = champions.most_common(1)
+        if len(champions_common) >= 1:
+            champion = champions_common[0]
+        else:
+            champion = (None, None)
 
         text = f"NAME: {summoner_name}\n\nStats Since: {str(earliest_dt.date())}\nPlaying Duration: {ms_to_str(duration_s * 1000)}\n\nTotal Kills: {kills}\nTotal Deaths: {deaths}\nTotal Assists: {assists}\nTotal Wins: {wins}\nTotal losses: {losses}\n\nFavourite Lane: {lane[0]} ({lane[1]} times)\nFavourite Champion: {champion[0]} ({champion[1]} times)"
         return text
@@ -128,7 +136,7 @@ def getActive():
     for summoner in summoners:
         name, platform, region = summoner
 
-        if isInGame(summoner_name=name, platform=platform):
+        if  LOLbase.isInGame(summoner_name=name, platform=platform):
             active.append(name)
 
     return active
@@ -136,11 +144,17 @@ def getActive():
 
 if __name__ == "__main__":
     pass
-    # for t in getGameResultUpdates():
-    #     print(t)
+    for t in getGameResultUpdates(force=False):
+        print(t)
 
     # print(getActive())
 
     # summoner_name = "BroskiSammy"
     # t = getStats(summoner_name, return_text=True)
     # print(t)
+
+    res = ds.getMatches("TΩXIC", platform="euw1", region="europe")
+    print(getStats("TΩXIC"))
+
+    # res = LOLbase.getMatches(summoner_name="TΩXIC", platform="euw1", region="europe")
+    # print(res)
