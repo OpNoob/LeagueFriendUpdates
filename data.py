@@ -42,9 +42,12 @@ class DataStore:
             print("Tables dropped")
 
     def createSummoner(self, name: str, platform: str, region: str):
-        sql_insert = f"INSERT INTO {self._table_summoner} VALUES(NULL, ?, ?, ?, NULL)"
-        self.cur.execute(sql_insert, (name, platform, region))
-        self.commit()
+        if self.getSummonerID(name=name, platform=platform, region=region) is None:
+            sql_insert = f"INSERT INTO {self._table_summoner} VALUES(NULL, ?, ?, ?, NULL)"
+            self.cur.execute(sql_insert, (name, platform, region))
+            return True
+        else:
+            return False
 
     def setData(self, name: str, platform: str, region: str, data: dict):
         sql_update = f"UPDATE {self._table_summoner} SET {self._data_k}=? WHERE {self._name_k}=? AND {self._platform_k}=? AND {self._region_k}=?"
@@ -52,6 +55,8 @@ class DataStore:
         self.commit()
 
     def addMatch(self, name: str, platform: str, region: str, match: dict, match_id: str, commit=False):
+        assert match is not None
+
         if self.getMatch(match_id) is not None:
             return False
 
@@ -103,8 +108,9 @@ class DataStore:
         summoner_id = self.getSummonerID(name=name, platform=platform, region=region)
         if summoner_id is not None:
             sql_get = f"SELECT {self._match_k} FROM {self._table_match} WHERE {self._summoner_id}=?"
-            self.cur.execute(sql_get, (summoner_id,))
-            [json.loads(m) for m in self.cur.fetchall()]
+            self.cur.execute(sql_get, (summoner_id[0],))
+            matches = self.cur.fetchall()
+            return [json.loads(m[0]) for m in matches]
         else:
             print("Summoner id not found in database")
 
@@ -138,6 +144,6 @@ if __name__ == "__main__":
     # ds.setData("test", "123", "234", {1: 234})
     # print(ds.checkExists("test", "123", "234"))
     # print(ds.getSummoners())
-    print(len(ds.getAllMatches()))
+    # print(len(ds.getAllMatches()))
 
-    # ds.DROPALL()
+    ds.DROPALL()

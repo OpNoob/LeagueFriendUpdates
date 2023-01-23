@@ -1,6 +1,6 @@
 import requests
 
-with open("data/key.txt") as f_key:
+with open("data/riot_key.txt") as f_key:
     api_key = f_key.read()
 
 
@@ -39,7 +39,7 @@ def getSpectator(summoner_id: int = None, summoner_name: str = None, platform: s
 
 def isInGame(summoner_id: int = None, summoner_name: str = None, platform: str = "euw1"):
     spectator = getSpectator(summoner_id=summoner_id, summoner_name=summoner_name, platform=platform)
-    if spectator["status"]["status_code"] == 404:
+    if "status" in spectator and spectator["status"]["status_code"] == 404:
         return False
     return True
 
