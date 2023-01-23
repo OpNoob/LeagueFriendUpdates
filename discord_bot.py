@@ -1,6 +1,7 @@
 import discord, typing
 from discord.ext import commands, tasks
 from discord import app_commands
+from discord.ext.commands import has_permissions
 from LOL import *
 
 with open("data/discord_key.txt", "r") as key_f:
@@ -32,13 +33,42 @@ async def sammy(interaction):
     await interaction.response.send_message(text)
 
 
-# @app_commands.choices(option=[
-#     app_commands.Choice(name="summoner_name", value="BroskiSammy"),
-# ])
 @tree.command(name="stats", description="gets stats of any player /stats summonerName")
-async def stats(interaction, summoner_name: str):
-    text = getStats(summoner_name)
+async def stats(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
+    text = getStats(summoner_name, platform=platform, region=region)
     await interaction.response.send_message(text)
+
+
+@tree.command(name="add", description="add new user")
+@has_permissions(administrator=True)
+async def add(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
+    await interaction.response.send_message(f"Adding summoner '{summoner_name}' ...", ephemeral=True)
+    text = addSummoner(summoner_name, platform=platform, region=region)
+    await interaction.edit_original_response(content=text)
+
+
+@tree.command(name="remove", description="remove user")
+@has_permissions(administrator=True)
+async def remove(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
+    await interaction.response.send_message(f"Removing summoner '{summoner_name}' ...", ephemeral=True)
+    text = removeSummoner(summoner_name, platform=platform, region=region)
+    await interaction.edit_original_response(content=text)
+
+
+@tree.command(name="track", description="track when user is live")
+@has_permissions(administrator=True)
+async def track(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
+    await interaction.response.send_message(f"Tracking summoner '{summoner_name}' ...", ephemeral=True)
+    text = addTrackLive(interaction.guild.id, summoner_name, platform, region)
+    await interaction.edit_original_response(content=text)
+
+
+@tree.command(name="track-remove", description="remove user from live tracking")
+@has_permissions(administrator=True)
+async def track(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
+    await interaction.response.send_message(f"Releasing tracker on summoner '{summoner_name}' ...", ephemeral=True)
+    text = removeTrackLive(interaction.guild.id, summoner_name, platform, region)
+    await interaction.edit_original_response(content=text)
 
 
 @client.event
@@ -47,6 +77,7 @@ async def on_ready():
     print("Ready!")
 
     gameResultAnnouncements.start()
+    liveAnnouncements.start()
 
 
 @tasks.loop(seconds=60)
@@ -60,6 +91,20 @@ async def gameResultAnnouncements():
 
                 msg = f"{name} has {win_text} the game as {lane} lane ({champion}) with kda {kills}/{deaths}/{assists}"
                 await channel.send(msg)
+
+
+@tasks.loop(seconds=60)
+async def liveAnnouncements():
+    for live in getTrackLive():
+        guild_ids, (summoner_name, platform, region) = live
+        for guild in client.guilds:
+            if guild.id in guild_ids:
+                channel = guild.system_channel  # getting system channel
+                if channel.permissions_for(guild.me).send_messages:  # making sure you have permissions
+                    text = f"{summoner_name} is LIVE!  What are the changes of winning?"
+                    message = await channel.send(text)
+                    await message.add_reaction('✔')
+                    await message.add_reaction('❌')
 
 
 client.run(TOKEN)

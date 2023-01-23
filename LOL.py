@@ -3,7 +3,7 @@ from datetime import datetime
 
 import LOLbase
 from data import DataStore
-from announcements import GameResult
+from server_data import ServerData, LiveTracking
 import time
 
 """
@@ -36,10 +36,14 @@ def ms_to_str(milliseconds):
 
 
 ds = DataStore()
+sd = ServerData()
 
 
 def getGameResultUpdates(force=False):
-    summoners = set(ds.getSummoners())
+    lt = LiveTracking(sd.getTracking())
+    summoners = lt.getSummoners()
+
+    # summoners = set(ds.getSummoners())
 
     for summoner in summoners:
         name, platform, region = summoner
@@ -128,24 +132,109 @@ def getStats(summoner_name, platform="euw1", region="europe", return_text=True):
     return earliest_dt, duration_s, kills, deaths, assists, wins, losses, lanes, champions
 
 
-def getActive():
+def getActive(return_all=False):
     summoners = set(ds.getSummoners())
 
-    active = list()
+    active = set()
 
     for summoner in summoners:
         name, platform, region = summoner
 
-        if  LOLbase.isInGame(summoner_name=name, platform=platform):
-            active.append(name)
+        if LOLbase.isInGame(summoner_name=name, platform=platform):
+            if return_all:
+                active.add(summoner)
+            else:
+                active.add(name)
 
     return active
 
 
+def addSummoner(summoner_name, platform="euw1", region="europe", return_text=True):
+    added = ds.createSummoner(summoner_name, platform="euw1", region="europe")  # Add to database
+
+    if added:
+        # Add matches (data)
+        matches = LOLbase.getMatches(summoner_name=summoner_name, platform=platform, region=region)
+        for match_data in LOLbase.getMatchData(matches):
+            match_id = match_data['metadata']["matchId"]
+            success = ds.addMatch(name=summoner_name, platform=platform, region=region, match=match_data,
+                                  match_id=match_id)
+            if not success:
+                print("Addition of match failed")
+
+        ds.commit()
+
+        if return_text:
+            return f"Summoner '{summoner_name}' added to database (with {len(matches)} matches)"
+        return True
+
+    if return_text:
+        return f"Summoner '{summoner_name}' already exists in database"
+    return False
+
+
+def removeSummoner(summoner_name, platform="euw1", region="europe", return_text=True):
+    success = ds.removeSummoner(summoner_name, platform, region)
+    if return_text:
+        if success:
+            return f"Summoner '{summoner_name}' deletion successful"
+        else:
+            return f"Problem removing summoner '{summoner_name}'"
+    return success
+
+
+def addTrackLive(guild_id, summoner_name, platform="euw1", region="europe", return_text=True):
+    summoner_id = ds.getSummonerID(summoner_name, platform, region)
+    if summoner_id is None:
+        if return_text:
+            return f"Summoner '{summoner_name}' does not exist in database"
+        return False
+
+    server = sd.getServer(guild_id)
+
+    # Create server if not exists
+    if server is None:
+        sd.addServer(guild_id)
+        server = sd.getServer(guild_id)
+
+    server.addTracking(summoner_name, platform, region)
+    sd.save_class()
+
+    if return_text:
+        return f"Summoner '{summoner_name}' is now tracked"
+    return True
+
+
+def removeTrackLive(guild_id, summoner_name, platform="euw1", region="europe", return_text=True):
+    summoner_id = ds.getSummonerID(summoner_name, platform, region)
+    if summoner_id is None:
+        if return_text:
+            return f"Summoner '{summoner_name}' does not exist in database"
+        return False
+
+    server = sd.getServer(guild_id)
+    if server is not None:
+        server.removeTracking(summoner_name, platform, region)
+    sd.save_class()
+
+    if return_text:
+        return f"Summoner '{summoner_name}' is now tracked"
+    return True
+
+
+def getTrackLive():
+    lt = LiveTracking(sd.getTracking())
+    active = getActive(return_all=True)
+    stop_active, new_active = lt.noteLive(active)
+
+    for summoner_data in new_active:
+        yield lt.getGuilds(summoner_data), summoner_data
+
+
 if __name__ == "__main__":
     pass
-    for t in getGameResultUpdates(force=False):
-        print(t)
+    # for t in getGameResultUpdates(force=False):
+    #     print(t)
 
     # print(getActive())
 
@@ -153,8 +242,11 @@ if __name__ == "__main__":
     # t = getStats(summoner_name, return_text=True)
     # print(t)
 
-    res = ds.getMatches("TΩXIC", platform="euw1", region="europe")
-    print(getStats("TΩXIC"))
+    # res = ds.getMatches("TΩXIC", platform="euw1", region="europe")
+    # print(getStats("TΩXIC"))
 
     # res = LOLbase.getMatches(summoner_name="TΩXIC", platform="euw1", region="europe")
     # print(res)
+
+    for x in getTrackLive():
+        print(x)

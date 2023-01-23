@@ -113,8 +113,8 @@ class DataStore:
             self.cur.execute(sql_get, (summoner_id[0],))
             matches = self.cur.fetchall()
             return [json.loads(m[0]) for m in matches]
-        else:
-            print("Summoner id not found in database")
+        # else:
+        #     print("Summoner id not found in database")
 
     def getMatch(self, summoner_id: int, match_id: str):
         sql_get = f"SELECT {self._match_k} FROM {self._table_match} WHERE {self._summoner_id}=? AND {self._match_id_k}=?"
@@ -134,6 +134,23 @@ class DataStore:
         sql_get = f"SELECT * from {self._table_match}"
         self.cur.execute(sql_get)
         return self.cur.fetchall()
+
+    def removeSummoner(self, name: str, platform: str, region: str):
+        # Delete from matches
+        summoner_id = self.getSummonerID(name, platform, region)
+        if summoner_id is None:
+            return False
+        else:
+            summoner_id = summoner_id[0]
+            sql_del_mat = f"DELETE FROM {self._table_match} WHERE {self._summoner_id}=?"
+            self.cur.execute(sql_del_mat, (summoner_id,))
+
+            # Delete from summoners
+            sql_del_sum = f"DELETE FROM {self._table_summoner} WHERE LOWER({self._name_k})=LOWER(?) AND {self._platform_k}=? AND {self._region_k}=?"
+            self.cur.execute(sql_del_sum, (name, platform, region))
+
+            self.commit()
+            return True
 
     def __del__(self):
         self.conn.close()
