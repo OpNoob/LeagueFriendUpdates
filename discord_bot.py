@@ -96,7 +96,7 @@ async def frequentJobs():
             if guild.id in guild_ids:
                 channel = guild.system_channel  # getting system channel
                 if channel.permissions_for(guild.me).send_messages:  # making sure you have permissions
-                    win_text = "won" if win else "loss"
+                    win_text = "won" if win else "lost"
 
                     msg = f"{name} has {win_text} the game as {lane} lane ({champion}) with kda {kills}/{deaths}/{assists}"
                     await channel.send(msg)
