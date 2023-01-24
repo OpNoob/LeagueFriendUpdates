@@ -2,16 +2,20 @@ from ClassSave import ClassSL
 
 
 class LiveTracking:
-    def __init__(self, tracking: list[int, tuple[str]]):
+    def __init__(self, tracking: list[int, tuple[str]] = None):
         self.live = set()  # holds current live summoners
         self.guild_map = dict()  # holds each summoner with x guilds
 
+        if tracking is not None:
+            self.updateTracking(tracking)
+
+    def updateTracking(self, tracking: list[int, tuple[str]]):
         for (guild_id, summoners) in tracking:
             for summoner_data in summoners:
                 if summoner_data in self.guild_map:
-                    self.guild_map[summoner_data].append(guild_id)
+                    self.guild_map[summoner_data].add(guild_id)
                 else:
-                    self.guild_map[summoner_data] = [guild_id]
+                    self.guild_map[summoner_data] = {guild_id}
 
     def markDone(self, summoner_name: str, platform: str, region: str):
         self.live.remove((summoner_name, platform, region))
@@ -25,9 +29,14 @@ class LiveTracking:
     def noteLive(self, active: set[tuple[str]]):
         active = self.filterSummoners(active)  # keep only those that need to be tracked
 
+        print("self.live: ", self.live, "active: ", active)
+
         stop_active = self.live - active  # get summoners that stopping being active
         new_active = active - self.live  # get summoners that started being active
         self.live = active  # replace live with new active
+
+        print("stop_active: ", stop_active, "new_active: ", new_active, "self.live: ", self.live)
+
         return stop_active, new_active
 
     def getGuilds(self, summoner_data: tuple[str]):

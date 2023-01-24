@@ -44,10 +44,11 @@ def ms_to_str(milliseconds):
 
 ds = DataStore()
 sd = ServerData()
+lt = LiveTracking(sd.getTracking())
 
 
 def getGameResultUpdates(force=False):
-    lt = LiveTracking(sd.getTracking())
+    lt.updateTracking(sd.getTracking())
     summoners_track = lt.getSummoners()
 
     summoners = set(ds.getSummoners())
@@ -232,7 +233,7 @@ def removeTrackLive(guild_id, summoner_name, platform="euw1", region="europe", r
 
 
 def getTrackLive():
-    lt = LiveTracking(sd.getTracking())
+    lt.updateTracking(sd.getTracking())
     active = getActive(return_all=True)
     stop_active, new_active = lt.noteLive(active)
 
@@ -242,6 +243,15 @@ def getTrackLive():
 
 if __name__ == "__main__":
     pass
+
+    server = sd.getServer(432531599972892672)
+    server.addTracking("profmacabre", "euw1", "europe")
+    while True:
+        print("START")
+        for t in getTrackLive():
+            print(t)
+        time.sleep(5)
+
     # for t in getGameResultUpdates(force=True):
     #     print(t)
 
