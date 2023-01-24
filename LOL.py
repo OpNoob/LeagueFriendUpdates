@@ -1,5 +1,8 @@
 from collections import Counter
 from datetime import datetime
+import functools
+import typing
+import asyncio
 
 import LOLbase
 from data import DataStore
@@ -11,6 +14,10 @@ Resources:
 https://developer.riotgames.com/docs/lol#routing-values_platform-routing-values
 https://developer.riotgames.com/apis#match-v5/GET_getMatch
 """
+
+
+def yieldToList(generator):
+    return [x for x in generator]
 
 
 def convert_from_ms(milliseconds):
@@ -66,7 +73,8 @@ def getGameResultUpdates(force=False):
                 lane = participant["lane"]
                 win = participant["win"]
                 champion = participant["championName"]
-                yield name, kills, deaths, assists, win, lane, champion
+                guild_ids = lt.getGuilds(summoner)
+                yield guild_ids, name, kills, deaths, assists, win, lane, champion
 
     # Saving
     ds.commit()
@@ -234,7 +242,7 @@ def getTrackLive():
 
 if __name__ == "__main__":
     pass
-    # for t in getGameResultUpdates(force=False):
+    # for t in getGameResultUpdates(force=True):
     #     print(t)
 
     # print(getActive())
@@ -249,5 +257,5 @@ if __name__ == "__main__":
     # res = LOLbase.getMatches(summoner_name="TΩXIC", platform="euw1", region="europe")
     # print(res)
 
-    for x in getTrackLive():
-        print(x)
+    # for x in getTrackLive():
+    #     print(x)

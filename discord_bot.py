@@ -1,3 +1,4 @@
+import asyncio
 import discord, typing
 from discord.ext import commands, tasks
 from discord import app_commands
@@ -11,9 +12,12 @@ intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
+loop = asyncio.get_event_loop()
+
 
 @tree.command(name="active", description="shows which players are active")
 async def active(interaction):
+    await interaction.response.send_message(f"Getting active users ...", ephemeral=True)
     active_list = getActive()
 
     if len(active_list) == 0:
@@ -23,20 +27,21 @@ async def active(interaction):
         for name in active_list:
             text += '\n\t' + name
 
-    await interaction.response.send_message(text)
+    await interaction.edit_original_response(content=text)
 
 
 @tree.command(name="sammy", description="show Sammy bussin stats")
 async def sammy(interaction):
+    await interaction.response.send_message(f"Getting stats OF MY LORD SAMMY...", ephemeral=True)
     text = getStats("BroskiSammy")
-
-    await interaction.response.send_message(text)
+    await interaction.edit_original_response(content=text)
 
 
 @tree.command(name="stats", description="gets stats of any player /stats summonerName")
 async def stats(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
+    await interaction.response.send_message(f"Getting stats ...", ephemeral=True)
     text = getStats(summoner_name, platform=platform, region=region)
-    await interaction.response.send_message(text)
+    await interaction.edit_original_response(content=text)
 
 
 @tree.command(name="add", description="add new user")
@@ -74,28 +79,32 @@ async def track(interaction, summoner_name: str, platform: str = "euw1", region:
 @client.event
 async def on_ready():
     await tree.sync()
+
     print("Ready!")
 
-    gameResultAnnouncements.start()
-    liveAnnouncements.start()
+    frequentJobs.start()
 
 
 @tasks.loop(seconds=60)
-async def gameResultAnnouncements():
-    for result in getGameResultUpdates():
-        name, kills, deaths, assists, win, lane, champion = result
+async def frequentJobs():
+    # testing: 432531599972892672
+
+    # getGameResultUpdates
+    result_list = await client.loop.run_in_executor(None, yieldToList, (getGameResultUpdates()))
+    for result in result_list:
+        guild_ids, name, kills, deaths, assists, win, lane, champion = result
         for guild in client.guilds:
-            channel = guild.system_channel  # getting system channel
-            if channel.permissions_for(guild.me).send_messages:  # making sure you have permissions
-                win_text = "won" if win else "loss"
+            if guild.id in guild_ids:
+                channel = guild.system_channel  # getting system channel
+                if channel.permissions_for(guild.me).send_messages:  # making sure you have permissions
+                    win_text = "won" if win else "loss"
 
-                msg = f"{name} has {win_text} the game as {lane} lane ({champion}) with kda {kills}/{deaths}/{assists}"
-                await channel.send(msg)
+                    msg = f"{name} has {win_text} the game as {lane} lane ({champion}) with kda {kills}/{deaths}/{assists}"
+                    await channel.send(msg)
 
-
-@tasks.loop(seconds=60)
-async def liveAnnouncements():
-    for live in getTrackLive():
+    # getTrackLive
+    result_list = await client.loop.run_in_executor(None, yieldToList, (getTrackLive()))
+    for live in result_list:
         guild_ids, (summoner_name, platform, region) = live
         for guild in client.guilds:
             if guild.id in guild_ids:

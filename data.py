@@ -4,7 +4,7 @@ import json
 
 class DataStore:
     def __init__(self, path="data/database.db"):
-        self.conn = sqlite3.connect(path)
+        self.conn = sqlite3.connect(path, check_same_thread=False)
         self.cur = self.conn.cursor()
 
         # names for sql
