@@ -29,13 +29,13 @@ class LiveTracking:
     def noteLive(self, active: set[tuple[str]]):
         active = self.filterSummoners(active)  # keep only those that need to be tracked
 
-        print("self.live: ", self.live, "active: ", active)
+        # print("self.live: ", self.live, "active: ", active)
 
         stop_active = self.live - active  # get summoners that stopping being active
         new_active = active - self.live  # get summoners that started being active
         self.live = active  # replace live with new active
 
-        print("stop_active: ", stop_active, "new_active: ", new_active, "self.live: ", self.live)
+        # print("stop_active: ", stop_active, "new_active: ", new_active, "self.live: ", self.live)
 
         return stop_active, new_active
 

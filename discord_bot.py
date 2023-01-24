@@ -109,7 +109,7 @@ async def frequentJobs():
             if guild.id in guild_ids:
                 channel = guild.system_channel  # getting system channel
                 if channel.permissions_for(guild.me).send_messages:  # making sure you have permissions
-                    text = f"{summoner_name} is LIVE!  What are the changes of winning?"
+                    text = f"{summoner_name} is LIVE!  What are the chances of winning?"
                     message = await channel.send(text)
                     await message.add_reaction('✔')
                     await message.add_reaction('❌')
