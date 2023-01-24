@@ -1,4 +1,3 @@
-import asyncio
 import discord, typing
 from discord.ext import commands, tasks
 from discord import app_commands
@@ -17,7 +16,7 @@ loop = asyncio.get_event_loop()
 
 @tree.command(name="active", description="shows which players are active")
 async def active(interaction):
-    await interaction.response.send_message(f"Getting active users ...", ephemeral=True)
+    await interaction.response.send_message(f"Getting active users ...", ephemeral=False)
     active_list = getActive()
 
     if len(active_list) == 0:
@@ -32,14 +31,14 @@ async def active(interaction):
 
 @tree.command(name="sammy", description="show Sammy bussin stats")
 async def sammy(interaction):
-    await interaction.response.send_message(f"Getting stats OF MY LORD SAMMY...", ephemeral=True)
+    await interaction.response.send_message(f"Getting stats OF MY LORD SAMMY...", ephemeral=False)
     text = getStats("BroskiSammy")
     await interaction.edit_original_response(content=text)
 
 
 @tree.command(name="stats", description="gets stats of any player /stats summonerName")
 async def stats(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
-    await interaction.response.send_message(f"Getting stats ...", ephemeral=True)
+    await interaction.response.send_message(f"Getting stats ...", ephemeral=False)
     text = getStats(summoner_name, platform=platform, region=region)
     await interaction.edit_original_response(content=text)
 
@@ -47,7 +46,7 @@ async def stats(interaction, summoner_name: str, platform: str = "euw1", region:
 @tree.command(name="add", description="add new user")
 @has_permissions(administrator=True)
 async def add(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
-    await interaction.response.send_message(f"Adding summoner '{summoner_name}' ...", ephemeral=True)
+    await interaction.response.send_message(f"Adding summoner '{summoner_name}' ...", ephemeral=False)
     text = addSummoner(summoner_name, platform=platform, region=region)
     await interaction.edit_original_response(content=text)
 
@@ -55,7 +54,7 @@ async def add(interaction, summoner_name: str, platform: str = "euw1", region: s
 @tree.command(name="remove", description="remove user")
 @has_permissions(administrator=True)
 async def remove(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
-    await interaction.response.send_message(f"Removing summoner '{summoner_name}' ...", ephemeral=True)
+    await interaction.response.send_message(f"Removing summoner '{summoner_name}' ...", ephemeral=False)
     text = removeSummoner(summoner_name, platform=platform, region=region)
     await interaction.edit_original_response(content=text)
 
@@ -63,7 +62,7 @@ async def remove(interaction, summoner_name: str, platform: str = "euw1", region
 @tree.command(name="track", description="track when user is live")
 @has_permissions(administrator=True)
 async def track(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
-    await interaction.response.send_message(f"Tracking summoner '{summoner_name}' ...", ephemeral=True)
+    await interaction.response.send_message(f"Tracking summoner '{summoner_name}' ...", ephemeral=False)
     text = addTrackLive(interaction.guild.id, summoner_name, platform, region)
     await interaction.edit_original_response(content=text)
 
@@ -71,7 +70,7 @@ async def track(interaction, summoner_name: str, platform: str = "euw1", region:
 @tree.command(name="track-remove", description="remove user from live tracking")
 @has_permissions(administrator=True)
 async def track(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
-    await interaction.response.send_message(f"Releasing tracker on summoner '{summoner_name}' ...", ephemeral=True)
+    await interaction.response.send_message(f"Releasing tracker on summoner '{summoner_name}' ...", ephemeral=False)
     text = removeTrackLive(interaction.guild.id, summoner_name, platform, region)
     await interaction.edit_original_response(content=text)
 
