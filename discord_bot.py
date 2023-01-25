@@ -36,6 +36,13 @@ async def sammy(interaction):
     await interaction.edit_original_response(content=text)
 
 
+@tree.command(name="nathan", description="erga prova")
+async def nathan(interaction):
+    embed = discord.Embed()
+    embed.description = "[POO POO PEE PEE] [here](https://www.youtube.com/watch?v=dQw4w9WgXcQ)."
+    await interaction.response.send_message(embed=embed, ephemeral=False)
+
+
 @tree.command(name="stats", description="gets stats of any player /stats summonerName")
 async def stats(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
     await interaction.response.send_message(f"Getting stats ...", ephemeral=False)
