@@ -39,7 +39,7 @@ async def sammy(interaction):
 @tree.command(name="nathan", description="erga prova")
 async def nathan(interaction):
     embed = discord.Embed()
-    embed.description = "[POO POO PEE PEE] [here](https://www.youtube.com/watch?v=dQw4w9WgXcQ)."
+    embed.description = "[POO POO PEE PEE](https://www.youtube.com/watch?v=dQw4w9WgXcQ)."
     await interaction.response.send_message(embed=embed, ephemeral=False)
 
 
