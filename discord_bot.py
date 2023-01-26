@@ -43,6 +43,13 @@ async def nathan(interaction):
     await interaction.response.send_message(embed=embed, ephemeral=False)
 
 
+@tree.command(name="jeremy", description="giga chad")
+async def jeremy(interaction):
+    await interaction.response.send_message(f"hello jeremy", ephemeral=False)
+    file = discord.File('assets/jeremy/dress.mp4', "dress.mp4")
+    await interaction.edit_original_response(attachments=[file])
+
+
 @tree.command(name="stats", description="gets stats of any player /stats summonerName")
 async def stats(interaction, summoner_name: str, platform: str = "euw1", region: str = "europe"):
     await interaction.response.send_message(f"Getting stats ...", ephemeral=False)
