@@ -129,4 +129,8 @@ async def frequentJobs():
                     await message.add_reaction('❌')
 
 
-client.run(TOKEN)
+if __name__ == "__main__":
+    # Before start, run the following:
+    getGameResultUpdates(force=False)
+
+    client.run(TOKEN)
